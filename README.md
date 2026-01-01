@@ -1,4 +1,4 @@
-# Proyecto Experimental WarNet: Dron Jammer de Espectro Completo
+# Proyecto Experimental T4 WarNet: Dron Jammer de Espectro Completo
 
 Este proyecto experimental implementa un sistema de contramedidas electrónicas móvil y autónomo, el **Dron WarNet**, coordinado por un **Gateway Central** con una interfaz de usuario de estilo retro arcade llamada **Play WarNet**.
 
