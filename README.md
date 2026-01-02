@@ -90,61 +90,63 @@ ANALISIS:
 
 
 
--Play WarNet UI (Radar)
+-Play WarNet UI (Radar) (1)
 
-Desarrollado (Simulación)
+Desarrollado (Simulación) (2)
 
-gateway_ui/src/play_warnet_ui.py
+gateway_ui/src/play_warnet_ui.py. (3)
 
-Conexión real a la red LoRaWAN (socket/serial) para recibir datos de telemetría en lugar de datos simulados.
-
-
-
--Gateway Central (Python)
-
-Desarrollado (Lógica)
-
-gateway_ui/src/play_warnet_ui.py
-
-Módulo de traducción de voz a texto (ASR) y el LLM real (Amais) para traducir comandos a paquetes LoRaWAN.
+Conexión real a la red LoRaWAN (socket/serial) para recibir datos de telemetría en lugar de datos simulados. (4)
 
 
 
--WarNet S3 (Control de Vuelo)
+-Gateway Central (Python) (1)
 
-Desarrollado (Lógica)
+Desarrollado (Lógica). (2)
 
-warnet_s3_control/src/main.cpp
+gateway_ui/src/play_warnet_ui.py. (3)
 
-Implementación real de la librería de control de vuelo (ej. MultiWii portado) y las API de bajo nivel del ESP-IDF para el Jammer de Wi-Fi.
-
-
+Módulo de traducción de voz a texto (ASR) y el LLM real (Amais) para traducir comandos a paquetes LoRaWAN.  (4)
 
 
 
--WarNet C3 (Jammer/LoRaWAN)
+-WarNet S3 (Control de Vuelo). (1)
 
-Desarrollado (Lógica)
+Desarrollado (Lógica). (2)
 
-warnet_c3_jammer/src/main.cpp
+warnet_s3_control/src/main.cpp. (3)
 
-Integración real de la librería LoRaWAN (LMIC) y la librería de bajo nivel para el Jammer de Bluetooth y el control del Módulo RF de Espectro Amplio (ej. CC1101).
+Implementación real de la librería de control de vuelo (ej. MultiWii portado) y las API de bajo nivel del ESP-IDF para el Jammer de Wi-Fi.  (4)
 
 
 
 
--TinyML
 
-Diseñado (Teórico)
+-WarNet C3 (Jammer/LoRaWAN) (1)
 
-Módulos de código en C++ (no incluidos)
+Desarrollado (Lógica). (2)
 
-Entrenamiento y despliegue de los modelos TinyML reales para el análisis de espectro en el ESP32-S3.
+warnet_c3_jammer/src/main.cpp. (3)
+
+Integración real de la librería LoRaWAN (LMIC) y la librería de bajo nivel para el Jammer de Bluetooth y el control del Módulo RF de Espectro Amplio (ej. CC1101).   (4)
 
 
 
 
-3. 
+-TinyML.   (1)
+
+Diseñado (Teórico).   (2)
+
+Módulos de código en C++ (no incluidos).    (3)
+
+Entrenamiento y despliegue de los modelos TinyML reales para el análisis de espectro en el ESP32-S3.  (4)
+
+
+
+
+
+## 4.3-Comunicacion
+
 El código de la interfaz de radar (play_warnet_ui.py) está enlazado lógicamente con el resto del proyecto.
 
 Lógica de Enlace: El script de Python simula la recepción de datos de los dispositivos (ID, distancia, estado de Jammer) que, en una implementación real, serían enviados por el WarNet C3 a través de LoRaWAN al Gateway Central.
@@ -161,10 +163,20 @@ Acción y Visualización: El estado de los indicadores en la UI (Rojo/Verde) re
 
 ## 5. Licencia
 
-Este proyecto se distribuye bajo la **Apache License 2.0**.
+Este proyecto se distribuye bajo la **Apache License 2.0**. Sin Garantías ni Resposabilidades por usos.  
+
+Siendo un proyecto unicamente funcional al estilo Juego de Ender, con logica de estacion de Radar y juego de Direccionamiento y Ejecucion de Acciones en web básica Grafica de simulacion y entrenamiento.
+
+
+Siendo el proyecto real concluso de implementacion:
+
+https://github.com/yoqer/T4-WarNet-Project
+
+
+
 
 ## 6. Referencias
 
 *   **Estudio Técnico:** `technical_study_warnet_jammer.md`
 *   **Diseño de Arquitectura:** `warnet_architecture_design.md`
-*   **Paper ESPwn32:** [https://hal.science/hal-04183794/file/ESP32WOOT_CameraReady.pdf](https://hal.science/hal-04183794/file/ESP32WOOT_CameraReady.pdf)
+*   **Vease Modelo T4 **      Con diseño basico de comunicacion central.
