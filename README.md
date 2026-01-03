@@ -3,8 +3,7 @@
 
 Web de estudio de experimentacion, no funcional.
 
-[http://maxxine.net/war/play_warnet_homepage.html]
-(http://carlomaxxine.com/war/t4/play_warnet_homepage.html)
+[http://maxxine.net/war/play_warnet_homepage.html](http://carlomaxxine.com/war/t4/play_warnet_homepage.html)
 
 
 Este proyecto experimental implementa un sistema de contramedidas electrónicas móvil y autónomo, el **Dron WarNet**, coordinado por un **Gateway Central** con una interfaz de usuario de estilo retro arcade llamada **Play WarNet**.
