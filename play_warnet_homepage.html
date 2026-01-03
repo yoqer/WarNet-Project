@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play WarNet - Gateway Central</title>
+    <style>
+        /* Estilo Retro Arcade */
+        body {
+            background-color: #000000;
+            color: #00FF00; /* Verde Retro */
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            border: 2px solid #00FF00;
+            padding: 40px;
+            box-shadow: 0 0 20px #00FF00;
+            max-width: 800px;
+            width: 90%;
+        }
+        h1 {
+            color: #FF0000; /* Rojo de Alerta */
+            text-shadow: 0 0 5px #FF0000;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #00FF00;
+            font-size: 1.5em;
+            margin-top: 30px;
+            border-bottom: 1px dashed #00FF00;
+            padding-bottom: 5px;
+        }
+        .function-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin: 20px 0;
+        }
+        .function-list li strong {
+            color: #00FFFF; /* Cian para destacar */
+        }
+        .access-button {
+            display: inline-block;
+            background-color: #FF0000;
+            color: #000000;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 2px solid #FF0000;
+            box-shadow: 0 0 10px #FF0000;
+            transition: all 0.3s;
+            margin-top: 40px;
+        }
+        .access-button:hover {
+            background-color: #000000;
+            color: #FF0000;
+            box-shadow: 0 0 30px #FF0000;
+        }
+        .footer {
+            margin-top: 50px;
+            font-size: 0.8em;
+            color: #008800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PLAY WARNET</h1>
+        <p>Sistema de Orquestación de Contramedidas Electrónicas (Gateway Central)</p>
+
+        <h2>Funcionalidades del Sistema</h2>
+        <ul class="function-list">
+            <li><strong>Radar Retro Arcade:</strong> Visualización en tiempo real de detecciones y acciones de Jammer con estética de radar marítimo/aeronáutico.</li>
+            <li><strong>Geolocalización Aproximada:</strong> Mapeo de dispositivos detectados (drones, coches, relojes) basado en la posición del Dron WarNet y la intensidad de la señal (RSSI).</li>
+            <li><strong>Control por Voz (Amais):</strong> Traducción de comandos de voz a paquetes LoRaWAN para el control del Dron WarNet.</li>
+            <li><strong>Orquestación de Jammer:</strong> Coordinación de los ESP32-S3 y ESP32-C3 para ejecutar Jammer de amplio espectro (Wi-Fi, Bluetooth, Celular, LoRaWAN).</li>
+            <li><strong>Monitoreo de Efectividad:</strong> Paneles laterales con indicadores de estado (Rojo/Verde) para las acciones de Jammer.</li>
+        </ul>
+
+        <h2>Acceso al Servidor</h2>
+        <p>Haga clic en el botón para acceder a la interfaz de control en tiempo real (simulación de conexión al servidor).</p>
+        
+        <a href="#" class="access-button" onclick="alert('Simulación: Conectando al servidor de Play WarNet...'); return false;">
+            ACCEDER AL RADAR EN TIEMPO REAL
+        </a>
+
+        <div class="footer">
+            WarNet Project - Experimental Build 2025 | Comunicación Exclusiva LoRaWAN
+        </div>
+    </div>
+</body>
+</html>
