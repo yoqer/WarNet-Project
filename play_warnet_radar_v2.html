@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play WarNet - Radar Retro Arcade V2</title>
+    <style>
+        /* Estilos Base y Retro */
+        body {
+            background-color: #000000;
+            color: #00FF00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow: hidden;
+        }
+        .main-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            border: 2px solid #00FF00;
+            box-sizing: border-box;
+        }
+        .radar-area {
+            flex: 2;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .control-panel {
+            flex: 1;
+            background-color: #001100;
+            border-left: 2px solid #00FF00;
+            padding: 15px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        #radarCanvas {
+            border: 1px solid #00FF00;
+            box-shadow: 0 0 10px #00FF00;
+            background-color: #000000;
+            max-width: 100%;
+            height: auto;
+        }
+        .title {
+            color: #FF0000;
+            text-shadow: 0 0 5px #FF0000;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .indicator, .log-entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #004400;
+            font-size: 0.8em;
+        }
+        .indicator-status.active { color: #00FF00; }
+        .indicator-status.inactive { color: #FF0000; }
+        .indicator-status.warning { color: #FFFF00; }
+
+        /* Botones de Control */
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 15px;
+            border-top: 1px solid #004400;
+            padding-top: 10px;
+        }
+        .control-buttons button {
+            background-color: #004400;
+            color: #00FF00;
+            border: 1px solid #00FF00;
+            padding: 8px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7em;
+            flex-grow: 1;
+            min-width: 100px;
+        }
+        .control-buttons button:hover {
+            background-color: #008800;
+        }
+
+        /* Responsividad para Móviles */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+            .radar-area {
+                order: 2; /* Mover el radar abajo */
+                flex: none;
+                height: 50vh;
+            }
+            .control-panel {
+                order: 1; /* Mover el panel de control arriba */
+                flex: none;
+                height: 50vh;
+                border-left: none;
+                border-bottom: 2px solid #00FF00;
+            }
+            .control-buttons button {
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="radar-area" id="radarArea">
+            <div class="title">PLAY WARNET - ORQUESTACIÓN DE CONTRAMEDIDAS</div>
+            <canvas id="radarCanvas" width="500" height="500"></canvas>
+            <div class="control-buttons">
+                <button onclick="toggleRastreo('WIFI')">Rastreo Wi-Fi</button>
+                <button onclick="toggleRastreo('BLE')">Rastreo BLE</button>
+                <button onclick="toggleRastreo('LORA')">Rastreo LoRa</button>
+                <button onclick="toggleAutomatizacion()">Automatizar Rotación</button>
+                <button onclick="window.location.href='play_warnet_landing_v2.html'">Apagar/Salir</button>
+            </div>
+        </div>
+        <div class="control-panel" id="controlPanel">
+            <h2>ESTADO DE LA FORMACIÓN</h2>
+            <div id="statusPanel"></div>
+            <h2>REGISTRO DE ACCIONES</h2>
+            <div id="logPanel"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('radarCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const maxRange = centerX - 50;
+        const statusPanel = document.getElementById('statusPanel');
+        const logPanel = document.getElementById('logPanel');
+        const radarArea = document.getElementById('radarArea');
+        const controlPanel = document.getElementById('controlPanel');
+
+        let targets = [
+            { id: 'WARNET_DRONE', dist: 0, angle: 0, type: 'DRONE_JAMMER', status: 'ONLINE', color: '#00FFFF', battery: 90 },
+            { id: 'TARGET_WIFI_01', dist: 150, angle: 45, type: 'WIFI_AP', status: 'DETECTADO', color: '#FF0000', band: 'WIFI' },
+            { id: 'TARGET_BLE_02', dist: 200, angle: 120, type: 'WATCH', status: 'JAMMING', color: '#FFFF00', band: 'BLE' },
+            { id: 'TARGET_LORA_03', dist: 50, angle: 270, type: 'LORA_NODE', status: 'JAMMING_EFFECTIVE', color: '#00FF00', band: 'LORA' }
+        ];
+
+        let formationStatus = {
+            'WARNET_DRONE': { label: 'Dron WarNet (S3/C3)', status: 'ONLINE', color: '#00FF00' },
+            'JAMMER_WIFI': { label: 'Jammer Wi-Fi (S3)', status: 'INACTIVO', color: '#FF0000' },
+            'JAMMER_BLE': { label: 'Jammer BLE (C3)', status: 'INACTIVO', color: '#FF0000' },
+            'LORA_COMM': { label: 'LoRaWAN Link', status: 'ESTABLE', color: '#00FF00' }
+        };
+
+        let currentRastreo = 'ALL';
+        let automatizacionActiva = false;
+        let currentBandIndex = 0;
+        const bands = ['WIFI', 'BLE', 'LORA'];
+
+        // --- Funciones de Control ---
+
+        function toggleRastreo(band) {
+            currentRastreo = (currentRastreo === band) ? 'ALL' : band;
+            logAction(`Rastreo cambiado a: ${currentRastreo}`);
+            formationStatus['JAMMER_WIFI'].status = (currentRastreo === 'WIFI' || currentRastreo === 'ALL') ? 'ACTIVO' : 'INACTIVO';
+            formationStatus['JAMMER_BLE'].status = (currentRastreo === 'BLE' || currentRastreo === 'ALL') ? 'ACTIVO' : 'INACTIVO';
+        }
+
+        function toggleAutomatizacion() {
+            automatizacionActiva = !automatizacionActiva;
+            logAction(`Automatización de Rotación: ${automatizacionActiva ? 'ACTIVADA' : 'DESACTIVADA'}`);
+        }
+
+        function rotateBands() {
+            if (automatizacionActiva) {
+                currentBandIndex = (currentBandIndex + 1) % bands.length;
+                toggleRastreo(bands[currentBandIndex]);
+            }
+        }
+
+        // --- Lógica de Dibujo del Radar ---
+
+        function drawRadar() {
+            // ... (Lógica de dibujo del radar similar a la versión anterior)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#004400';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 4; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, maxRange * i / 4, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#004400';
+            for (let i = 0; i < 12; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                const angle = i * Math.PI / 6;
+                ctx.lineTo(centerX + maxRange * Math.cos(angle), centerY + maxRange * Math.sin(angle));
+                ctx.stroke();
+            }
+
+            const sweepAngle = (Date.now() / 10) % 360;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + maxRange * Math.cos(sweepAngle * Math.PI / 180), centerY + maxRange * Math.sin(sweepAngle * Math.PI / 180));
+            ctx.strokeStyle = '#00FF00';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            targets.forEach(target => {
+                if (currentRastreo === 'ALL' || target.band === currentRastreo) {
+                    const angleRad = target.angle * Math.PI / 180;
+                    const x = centerX + target.dist * Math.cos(angleRad);
+                    const y = centerY + target.dist * Math.sin(angleRad);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = target.color;
+                    ctx.shadowColor = target.color;
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = '#00FFFF';
+                    ctx.font = '10px Courier New';
+                    ctx.fillText(target.id, x + 8, y + 4);
+                }
+            });
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FF0000';
+            ctx.fill();
+        }
+
+        // --- Lógica de Actualización ---
+
+        function updateTargets() {
+            targets.forEach(target => {
+                if (target.id !== 'WARNET_DRONE') {
+                    target.angle = (target.angle + 0.5) % 360;
+                    target.dist = Math.max(50, Math.min(maxRange, target.dist + (Math.random() - 0.5) * 5));
+                } else {
+                    target.battery = Math.max(5, target.battery - 0.05);
+                    formationStatus['WARNET_DRONE'].status = `BATT: ${target.battery.toFixed(1)}%`;
+                    formationStatus['WARNET_DRONE'].color = target.battery < 20 ? '#FFFF00' : '#00FF00';
+                }
+
+                // Simulación de efectividad del Jammer
+                if (target.status === 'JAMMING' && Math.random() < 0.005) {
+                    target.status = 'JAMMING_EFFECTIVE';
+                    target.color = '#00FF00';
+                    logAction(`[LOG] Jammer efectivo contra ${target.id} (${target.type}).`);
+                } else if (target.status === 'JAMMING_EFFECTIVE' && Math.random() < 0.002) {
+                    target.status = 'JAMMING';
+                    target.color = '#FFFF00';
+                }
+            });
+            updateControlPanel();
+        }
+
+        function updateControlPanel() {
+            statusPanel.innerHTML = '';
+            for (const key in formationStatus) {
+                const status = formationStatus[key];
+                const html = `
+                    <div class="indicator">
+                        <div class="indicator-label">${status.label}</div>
+                        <div class="indicator-status" style="color: ${status.color};">${status.status}</div>
+                    </div>
+                `;
+                statusPanel.innerHTML += html;
+            }
+        }
+
+        function logAction(message) {
+            const now = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${now}] ${message}`;
+            logPanel.prepend(entry);
+            if (logPanel.children.length > 30) {
+                logPanel.removeChild(logPanel.lastChild);
+            }
+        }
+
+        // --- Bucle Principal ---
+
+        function gameLoop() {
+            drawRadar();
+            updateTargets();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Inicialización
+        logAction('Sistema WarNet Iniciado. Rastreo: ALL');
+        setInterval(rotateBands, 5000); // Rotar bandas cada 5 segundos si la automatización está activa
+        gameLoop();
+    </script>
+</body>
+</html>
