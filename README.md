@@ -163,7 +163,8 @@ Acción y Visualización: El estado de los indicadores en la UI (Rojo/Verde) re
 
 ## 5. Licencia
 
-Este proyecto se distribuye bajo la **Apache License 2.0**. Sin Garantías ni Resposabilidades por usos.  
+Este proyecto se distribuye bajo la **Apache License 2.0**. 
+Sin Ofrecer Garantías funcionales, ni Resposabilidades por usos.  
 
 Siendo un proyecto unicamente funcional al estilo Juego de Ender, con logica de estacion de Radar y juego de Direccionamiento y Ejecucion de Acciones en web básica Grafica de simulacion y entrenamiento.
 
