@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play WarNet - Radar Retro Arcade</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #00FF00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .main-container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            border: 2px solid #00FF00;
+            box-shadow: 0 0 15px #00FF00;
+        }
+        .radar-area {
+            flex: 2;
+            position: relative;
+            background-color: #000000;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-panel {
+            flex: 1;
+            background-color: #001100;
+            border-left: 2px solid #00FF00;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+        #radarCanvas {
+            border: 1px solid #00FF00;
+            box-shadow: 0 0 10px #00FF00;
+            background-color: #000000;
+        }
+        .title {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FF0000;
+            text-shadow: 0 0 5px #FF0000;
+            font-size: 1.5em;
+            z-index: 10;
+        }
+        .indicator {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #008800;
+        }
+        .indicator-label {
+            color: #00FFFF;
+            font-size: 0.9em;
+        }
+        .indicator-status {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #FF0000;
+        }
+        .log-entry {
+            font-size: 0.8em;
+            color: #00FF00;
+            border-bottom: 1px dotted #004400;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="radar-area">
+            <div class="title">PLAY WARNET - ORQUESTACIÓN DE CONTRAMEDIDAS</div>
+            <canvas id="radarCanvas" width="500" height="500"></canvas>
+        </div>
+        <div class="control-panel">
+            <h2>ESTADO DE LA FORMACIÓN</h2>
+            <div id="statusPanel">
+                <!-- Indicadores de estado -->
+            </div>
+            <h2>REGISTRO DE ACCIONES</h2>
+            <div id="logPanel">
+                <!-- Registro de eventos -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('radarCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const maxRange = centerX - 50; // Radio máximo del radar
+
+        // Simulación de dispositivos detectados (ID, Distancia, Ángulo, Tipo, Estado)
+        let targets = [
+            { id: 'WARNET_DRONE', dist: 0, angle: 0, type: 'DRONE_JAMMER', status: 'ONLINE', color: '#00FFFF' },
+            { id: 'TARGET_WIFI_01', dist: 150, angle: 45, type: 'WIFI_AP', status: 'DETECTADO', color: '#FF0000' },
+            { id: 'TARGET_BLE_02', dist: 200, angle: 120, type: 'WATCH', status: 'JAMMING', color: '#FFFF00' },
+            { id: 'TARGET_LORA_03', dist: 50, angle: 270, type: 'LORA_NODE', status: 'JAMMING_EFFECTIVE', color: '#00FF00' }
+        ];
+
+        // Simulación de los paneles de estado
+        const formationStatus = {
+            'WARNET_DRONE': { label: 'Dron WarNet (S3/C3)', status: 'ONLINE', color: '#00FF00' },
+            'JAMMER_WIFI': { label: 'Jammer Wi-Fi (S3)', status: 'ACTIVO', color: '#FF0000' },
+            'JAMMER_BLE': { label: 'Jammer BLE (C3)', status: 'ACTIVO', color: '#FF0000' },
+            'LORA_COMM': { label: 'LoRaWAN Link', status: 'ESTABLE', color: '#00FF00' }
+        };
+
+        function drawRadar() {
+            // Limpiar
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar círculos concéntricos (Rango)
+            ctx.strokeStyle = '#004400';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 4; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, maxRange * i / 4, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            // Dibujar líneas de cuadrícula (Ángulo)
+            for (let i = 0; i < 12; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                const angle = i * Math.PI / 6;
+                ctx.lineTo(centerX + maxRange * Math.cos(angle), centerY + maxRange * Math.sin(angle));
+                ctx.stroke();
+            }
+
+            // Dibujar el barrido (Simulación Retro)
+            const sweepAngle = (Date.now() / 10) % 360;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX + maxRange * Math.cos(sweepAngle * Math.PI / 180), centerY + maxRange * Math.sin(sweepAngle * Math.PI / 180));
+            ctx.strokeStyle = '#00FF00';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Dibujar objetivos
+            targets.forEach(target => {
+                const angleRad = target.angle * Math.PI / 180;
+                const x = centerX + target.dist * Math.cos(angleRad);
+                const y = centerY + target.dist * Math.sin(angleRad);
+
+                // Dibujar el punto
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = target.color;
+                ctx.shadowColor = target.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Dibujar etiqueta
+                ctx.fillStyle = '#00FFFF';
+                ctx.font = '10px Courier New';
+                ctx.fillText(target.id, x + 8, y + 4);
+            });
+
+            // Dibujar el Gateway Central (Centro)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FF0000';
+            ctx.fill();
+        }
+
+        function updateTargets() {
+            // Simulación de movimiento y cambio de estado (TinyML/Jammer)
+            targets.forEach(target => {
+                if (target.id !== 'WARNET_DRONE') {
+                    target.angle = (target.angle + 0.5) % 360;
+                    target.dist = Math.max(50, Math.min(maxRange, target.dist + (Math.random() - 0.5) * 5));
+                }
+
+                // Simulación de efectividad del Jammer
+                if (target.status === 'JAMMING' && Math.random() < 0.01) {
+                    target.status = 'JAMMING_EFFECTIVE';
+                    target.color = '#00FF00';
+                    logAction(`[LOG] Jammer efectivo contra ${target.id} (${target.type}).`);
+                } else if (target.status === 'JAMMING_EFFECTIVE' && Math.random() < 0.005) {
+                    target.status = 'JAMMING';
+                    target.color = '#FFFF00';
+                }
+            });
+
+            // Simulación de la batería del dron
+            formationStatus['WARNET_DRONE'].status = `BATT: ${Math.max(5, targets[0].battery || 90).toFixed(1)}%`;
+            targets[0].battery = (targets[0].battery || 90) - 0.1;
+
+            updateControlPanel();
+        }
+
+        function updateControlPanel() {
+            const statusPanel = document.getElementById('statusPanel');
+            statusPanel.innerHTML = '';
+
+            for (const key in formationStatus) {
+                const status = formationStatus[key];
+                const color = status.color === '#00FF00' ? 'green' : 'red';
+                const html = `
+                    <div class="indicator">
+                        <div class="indicator-label">${status.label}</div>
+                        <div class="indicator-status" style="color: ${status.color};">${status.status}</div>
+                    </div>
+                `;
+                statusPanel.innerHTML += html;
+            }
+        }
+
+        function logAction(message) {
+            const logPanel = document.getElementById('logPanel');
+            const now = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${now}] ${message}`;
+            logPanel.prepend(entry);
+            if (logPanel.children.length > 20) {
+                logPanel.removeChild(logPanel.lastChild);
+            }
+        }
+
+        function gameLoop() {
+            drawRadar();
+            updateTargets();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Inicialización
+        logAction('Sistema WarNet Iniciado. Esperando telemetría LoRaWAN...');
+        logAction('Dron WarNet (S3/C3) en Misión.');
+        updateControlPanel();
+        gameLoop();
+    </script>
+</body>
+</html>
